@@ -1,16 +1,23 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 public class Enemy : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [SerializeField] private Transform target = null;
+    NavMeshAgent pathFinder;
     void Start()
     {
-        
+        pathFinder = GetComponent<NavMeshAgent>();
     }
 
-    // Update is called once per frame
+    public void SetTarget(Transform _target)
+    {
+        target = _target;
+    }
+
     void Update()
     {
-        
+        if (target == null) return;
+        pathFinder.SetDestination(target.position);
     }
 }
