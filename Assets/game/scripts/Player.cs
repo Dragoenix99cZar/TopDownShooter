@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
     [SerializeField] Camera viewCcamera;
 
     [SerializeField] float moveSpeed = 5;
+    [SerializeField] float sprintSpeed = 5;
     PlayerController controller;
     GunController gunController;
 
@@ -17,6 +18,8 @@ public class Player : MonoBehaviour
     Ray camRay;
     float rayDistance;
     Plane groundPlane;
+
+    bool shouldSprint = false;
 
     void Start()
     {
@@ -44,9 +47,10 @@ public class Player : MonoBehaviour
         if (Keyboard.current.aKey.isPressed) moveInput.x = -1;
         if (Keyboard.current.dKey.isPressed) moveInput.x = +1;
 
+         shouldSprint = Keyboard.current.spaceKey.isPressed;
 
         //Debug.Log($"value: {moveInput}");
-        moveVelocity = moveInput.normalized * moveSpeed;
+        moveVelocity = moveInput.normalized * moveSpeed * (shouldSprint? sprintSpeed : 1f);
         controller.Move(moveVelocity);
 
         // Weapon Input
