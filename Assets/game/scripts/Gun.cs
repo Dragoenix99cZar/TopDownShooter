@@ -9,6 +9,7 @@ public class Gun : MonoBehaviour
     [SerializeField] Projectile projectile;
 
     [SerializeField] GunConfigSO gunConfig;
+    [SerializeField] AudioSource audioSource;
 
     float nextShotTime;
 
@@ -50,7 +51,7 @@ public class Gun : MonoBehaviour
             tempProjectile = null;
         }
         listBullet = projectilePool.ToList();
-        //Debug.Break();
+        //audioSource.Play();
     }
 
     private IEnumerator UnLoadGun()

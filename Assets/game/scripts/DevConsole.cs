@@ -1,15 +1,23 @@
-using UnityEngine;
-using UnityEngine.InputSystem;
 using TMPro;
+using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 public class DevConsole : MonoBehaviour
 {
     [SerializeField] bool showInputConsole = false;
     [SerializeField] bool showFps = false;
-    [SerializeField] bool isPaused = false;
+    [SerializeField] bool shouldFollow = true;
+    [SerializeField] bool autoFire = false;
     [SerializeField] TMP_InputField inputField;
 
     [SerializeField] TMP_Text fpsTxt;
+
+    [SerializeField] AutoFire fireBot;
+    [SerializeField] bool isPaused = false;
+    [SerializeField] UnityEvent<bool> OnPausedTriggered;
+
     float pollingTime = 1f;
     float time;
     int frameCount;
@@ -34,6 +42,7 @@ public class DevConsole : MonoBehaviour
         {
             isPaused = !isPaused;
             Time.timeScale = isPaused ? 0f : 1f;
+            OnPausedTriggered?.Invoke(isPaused);
         }
         if (Time.time > nextPressedTime)
         {
@@ -68,6 +77,21 @@ public class DevConsole : MonoBehaviour
         if (cmd.Equals("fps"))
         {
             HandleFps();
+        }
+
+        if (cmd.Equals("auto"))
+        {
+            autoFire = !autoFire;
+            fireBot.enabled = autoFire;
+        }
+
+        if (cmd.Equals("sf"))
+        {
+            shouldFollow = !shouldFollow;
+            foreach (var enemy in FindObjectsByType<Enemy>())
+            {
+                enemy.ShouldFollowCMD = shouldFollow;
+            }
         }
     }
 

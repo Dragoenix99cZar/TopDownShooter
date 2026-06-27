@@ -1,12 +1,13 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Events;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class Enemy : MonoBehaviour
 {
     [SerializeField] NavMeshAgent pathFinder = null;
+    //[SerializeField] Rigidbody rb;
     [SerializeField] private int hp = 100;
     [SerializeField] private bool isAlive = false;
     [SerializeField] MeshRenderer meshRenderer;
@@ -15,21 +16,30 @@ public class Enemy : MonoBehaviour
     [SerializeField] Transform healthSpriteParent;
     [SerializeField] SpriteRenderer healthSprite;
 
-    public Action<Enemy> OnDeathTrigger;
+    public UnityEvent<Enemy> OnDeathTrigger;
 
     Transform target = null;
-
 
     WaitForSeconds _waitForSeconds;
 
     Coroutine hitCoroutine;
 
-    Vector3 cameraPosition;
+    Vector3 cameraPositionOffset;
 
     Color defaultColor;
 
-    public Transform Target { get => target; set => target = value; }
-    public Vector3 CameraPosition { get => cameraPosition; set => cameraPosition = value; }
+    public bool ShouldFollowCMD = true;
+
+    public Transform Target
+    {
+        get => target;
+        set => target = value;
+    }
+    public Vector3 CameraPosition
+    {
+        get => cameraPositionOffset;
+        set => cameraPositionOffset = value;
+    }
     public Color DefaultColor
     {
         get => defaultColor;
@@ -43,7 +53,7 @@ public class Enemy : MonoBehaviour
 
     void Start()
     {
-        _waitForSeconds = new WaitForSeconds(0.5f);
+        _waitForSeconds = new WaitForSeconds(0.25f);
     }
 
     private void OnEnable()
@@ -54,31 +64,40 @@ public class Enemy : MonoBehaviour
         healthSprite.color = DefaultColor;
         meshRenderer.material.color = DefaultColor;
 
-        pathFinder.speed *= 1.1f;
-    } 
+        pathFinder.speed *= 1.15f;
+
+        //ShouldFollowCMD = true;
+    }
 
     void Update()
     {
+        if (ShouldFollowCMD == false) return;
         if (isAlive == false) return;
-        if (Target == null) return;
-
-        pathFinder.SetDestination(Target.position);
-
         if (hp <= 0) OnDead();
+        if (target == null) return;
 
-        healthBar.rotation = Quaternion.LookRotation(CameraPosition - healthBar.position);
+        pathFinder.SetDestination(target.position);
+
+        healthBar.rotation = Quaternion.LookRotation(GetCameraPosition() - healthBar.position);
     }
 
-    private void OnTriggerEnter(Collider other)
+    Vector3 GetCameraPosition()
+    {
+        if (Target == null) return Vector3.up;
+
+        return target.position + cameraPositionOffset;
+    }
+
+    public void OnTriggerEnter(Collider other)
     {
         if (isAlive == false) return;
         if (other.CompareTag("Bullet"))
         {
-            TakeDamage();
+            TakeDamage(other.transform.forward);
         }
     }
 
-    private void TakeDamage()
+    private void TakeDamage(Vector3 knockbackDir)
     {
         hp -= 30;
         if (hp <= 0)
@@ -89,7 +108,7 @@ public class Enemy : MonoBehaviour
             return;
         }
 
-        transform.position += transform.forward * -1 + Vector3.one * 0.1f;
+        transform.position += knockbackDir + Vector3.one * 0.1f;
         hitCoroutine = StartCoroutine(HitEffect());
 
         if (hp < 40) healthSprite.color = Color.lightSalmon;
@@ -107,6 +126,10 @@ public class Enemy : MonoBehaviour
 
     IEnumerator HitEffect()
     {
+        meshRenderer.material.color = hitEffectColor;
+        yield return _waitForSeconds;
+        meshRenderer.material.color = DefaultColor;
+        yield return _waitForSeconds;
         meshRenderer.material.color = hitEffectColor;
         yield return _waitForSeconds;
         meshRenderer.material.color = DefaultColor;

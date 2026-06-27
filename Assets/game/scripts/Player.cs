@@ -5,7 +5,8 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(GunController))]
 public class Player : MonoBehaviour
 {
-    [SerializeField] Camera viewCcamera;
+    [SerializeField] Camera viewCamera;
+    [SerializeField] LayerMask groundLayerMask;
 
     [SerializeField] float moveSpeed = 5;
     [SerializeField] float sprintSpeed = 5;
@@ -28,15 +29,17 @@ public class Player : MonoBehaviour
         groundPlane = new Plane(Vector3.up, Vector3.zero);
     }
 
+    Vector3 lookAtPoint = Vector3.zero;
 
     void Update()
     {
-        camRay = viewCcamera.ScreenPointToRay(Mouse.current.position.value);
-        
+        camRay = viewCamera.ScreenPointToRay(Mouse.current.position.value);
+
         if (groundPlane.Raycast(camRay, out rayDistance))
         {
             Vector3 point = camRay.GetPoint(rayDistance);
-            //Debug.DrawLine(camRay.origin, point, Color.red);
+            Debug.DrawLine(camRay.origin, point, Color.red);
+            lookAtPoint = point;
             controller.LookAt(point);
         }
 
@@ -47,15 +50,16 @@ public class Player : MonoBehaviour
         if (Keyboard.current.aKey.isPressed) moveInput.x = -1;
         if (Keyboard.current.dKey.isPressed) moveInput.x = +1;
 
-         shouldSprint = Keyboard.current.spaceKey.isPressed;
+        shouldSprint = Keyboard.current.spaceKey.isPressed;
 
         //Debug.Log($"value: {moveInput}");
-        moveVelocity = moveInput.normalized * moveSpeed * (shouldSprint? sprintSpeed : 1f);
+        moveVelocity = moveInput.normalized * moveSpeed * (shouldSprint ? sprintSpeed : 1f);
         controller.Move(moveVelocity);
 
         // Weapon Input
-        if (Mouse.current.leftButton.wasPressedThisFrame || Keyboard.current.kKey.isPressed) {
-            gunController.Shoot();    
+        if (Mouse.current.leftButton.wasPressedThisFrame || Keyboard.current.kKey.isPressed)
+        {
+            gunController.Shoot();
         }
 
         if (!Keyboard.current.anyKey.isPressed)
@@ -63,7 +67,18 @@ public class Player : MonoBehaviour
             controller.Move(Vector3.zero);
             return;
         }
+
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawSphere(lookAtPoint, 0.5f);
         
+    }
+
+    private void OnGizmoSelected()
+    {
     }
 }
 

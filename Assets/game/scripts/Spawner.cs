@@ -7,14 +7,13 @@ using TMPro;
 
 public class Spawner : MonoBehaviour
 {
+    [SerializeField] private Transform mainCameraOffset;
     [SerializeField] private Transform target;
 
     [SerializeField] private Enemy enemyPrefab;
     [SerializeField] private List<Enemy> enemies;
 
-    //[SerializeField] private float spawnTime = 1f;
     [SerializeField] private int enemyCount = 5;
-    [Range(1f, 70f)]
     [SerializeField] private float spawnRadius;
 
     [SerializeField] private int enemiesAlive = 0;
@@ -25,10 +24,11 @@ public class Spawner : MonoBehaviour
     [SerializeField] Color[] powerUpColors;
 
     int MIN_ENEMY_COUNT = 20;
+    int SPAWN_THRESHOLD = 2;
 
     Enemy tempEnemy = null;
 
-    float waveSize = 0.2f;
+    float WAVE_SIZE_PERCENT = 0.8f;
 
     Queue<Enemy> enemyPool = null;
 
@@ -40,17 +40,17 @@ public class Spawner : MonoBehaviour
     public void FakeStart()
     {
         enemyPool = new Queue<Enemy>();
-        Vector3 camPos = Camera.main.transform.position;
         currentWaveColor = powerUpColors[GetCurrentWaveIdx()];
+        Vector3 offsetPos = mainCameraOffset.position;
         for (int i = 0; i < enemyCount; i++)
         {
             tempEnemy = Instantiate(enemyPrefab, transform);
             tempEnemy.gameObject.SetActive(false);
-            tempEnemy.OnDeathTrigger += WhenEnemyDie;
+            tempEnemy.OnDeathTrigger.AddListener(WhenEnemyDie);
             enemyPool.Enqueue(tempEnemy);
             tempEnemy.name = $"Enemy_{i:D2}";
             tempEnemy.Target = target;
-            tempEnemy.CameraPosition = camPos;
+            tempEnemy.CameraPosition = offsetPos;
             tempEnemy.DefaultColor = currentWaveColor;
         }
 
@@ -58,7 +58,7 @@ public class Spawner : MonoBehaviour
 
         enemiesKilled = 0;
         scoreTxt.text = enemiesKilled.ToString("D4");
-        powerThreshold = (int)(enemyCount * 0.4f);
+        powerThreshold = (int)(enemyCount * 0.75f);
         powerUpBar.value = 0;
         powerUpColor.color = currentWaveColor;
 
@@ -83,7 +83,7 @@ public class Spawner : MonoBehaviour
             currentWaveColor = powerUpColors[GetCurrentWaveIdx()];
             powerUpColor.color = currentWaveColor;
         }
-        if (enemiesAlive < MIN_ENEMY_COUNT * 0.1f)
+        if (enemiesAlive < SPAWN_THRESHOLD)
         {
             SpawnWave();
         }
@@ -91,7 +91,7 @@ public class Spawner : MonoBehaviour
 
     private void SpawnWave()
     {
-        for (int i = 0; i < (waveSize * enemyCount); i++)
+        for (int i = 0; i < (WAVE_SIZE_PERCENT * enemyCount); i++)
         {
             StartCoroutine(SpawnEnemy(enemyPool.Dequeue()));
             enemiesAlive += 1;
@@ -100,13 +100,13 @@ public class Spawner : MonoBehaviour
 
     IEnumerator SpawnEnemy(Enemy _enemy)
     {
-        _enemy.gameObject.SetActive(true);
-        Vector3 spawnPosition = target.position + UnityEngine.Random.insideUnitSphere * spawnRadius;
-        spawnPosition.y = transform.position.y;
-        _enemy.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
+        Vector3 _spawnPosition = target.position + UnityEngine.Random.insideUnitSphere * Mathf.Clamp( enemyCount, 20, spawnRadius);
+        yield return null;
+        _spawnPosition.y = transform.position.y;
+        _enemy.transform.SetPositionAndRotation(_spawnPosition, Quaternion.identity);
         _enemy.DefaultColor = currentWaveColor;
         _enemy.transform.GetChild(0).localScale = Vector3.one * UnityEngine.Random.Range(0.89f, 1.4f);
-        yield return null;
+        _enemy.gameObject.SetActive(true);        
     }
 
     public void OnTextFieldEndEdit(string txt)
