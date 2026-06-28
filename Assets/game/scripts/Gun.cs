@@ -11,15 +11,18 @@ public class Gun : MonoBehaviour
     [SerializeField] GunConfigSO gunConfig;
     [SerializeField] AudioSource audioSource;
 
+    AudioClip audioClip;
+
     float nextShotTime;
 
     Queue<Projectile> projectilePool;
     Projectile tempProjectile;
 
     [SerializeField] List<Projectile> listBullet;
-    public void ConfigureGunParameter(GunConfigSO gunConfigToUse)
+    public void ConfigureGunParameter(GunConfigSO gunConfigToUse, AudioClip _audio)
     {
         gunConfig = gunConfigToUse;
+        audioClip = _audio;
         LoadGun();
     }
 
@@ -49,9 +52,9 @@ public class Gun : MonoBehaviour
             tempProjectile.Fire(gunConfig);
             projectilePool.Enqueue(tempProjectile);
             tempProjectile = null;
+            audioSource.PlayOneShot(audioClip);
         }
         listBullet = projectilePool.ToList();
-        //audioSource.Play();
     }
 
     private IEnumerator UnLoadGun()

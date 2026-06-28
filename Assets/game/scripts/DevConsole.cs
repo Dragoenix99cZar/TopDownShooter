@@ -1,8 +1,9 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
-using UnityEngine.AI;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class DevConsole : MonoBehaviour
 {
@@ -10,13 +11,14 @@ public class DevConsole : MonoBehaviour
     [SerializeField] bool showFps = false;
     [SerializeField] bool shouldFollow = true;
     [SerializeField] bool autoFire = false;
+    [SerializeField] bool loadEnv = false;
+
     [SerializeField] TMP_InputField inputField;
-
     [SerializeField] TMP_Text fpsTxt;
-
-    [SerializeField] AutoFire fireBot;
     [SerializeField] bool isPaused = false;
+    [Space(10f)]
     [SerializeField] UnityEvent<bool> OnPausedTriggered;
+    [SerializeField] UnityEvent<bool> OnAutoMode;
 
     float pollingTime = 1f;
     float time;
@@ -82,7 +84,7 @@ public class DevConsole : MonoBehaviour
         if (cmd.Equals("auto"))
         {
             autoFire = !autoFire;
-            fireBot.enabled = autoFire;
+            OnAutoMode?.Invoke(autoFire);
         }
 
         if (cmd.Equals("sf"))
@@ -93,6 +95,18 @@ public class DevConsole : MonoBehaviour
                 enemy.ShouldFollowCMD = shouldFollow;
             }
         }
+
+        if (cmd.Equals("load") && loadEnv == false)
+        {
+            StartCoroutine(LoadVegetation());
+            loadEnv = true;
+        }
+    }
+
+    IEnumerator LoadVegetation()
+    {
+        SceneManager.LoadSceneAsync(1, LoadSceneMode.Additive);
+        yield return null;
     }
 
     private void HandleFps()

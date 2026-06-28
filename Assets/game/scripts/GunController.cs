@@ -5,6 +5,7 @@ public class GunController : MonoBehaviour
     [SerializeField] private Transform weaponHold;
     [SerializeField] private Gun startingGun;
     [SerializeField] private GunConfigSO gunConfig;
+    [SerializeField] private AudioClip fireClip;
 
     private Gun equippedGun;
 
@@ -21,7 +22,7 @@ public class GunController : MonoBehaviour
 
         equippedGun = Instantiate(gunToEquip, weaponHold.position, weaponHold.rotation);
         equippedGun.transform.SetParent(weaponHold);
-        equippedGun.ConfigureGunParameter(gunConfig);
+        equippedGun.ConfigureGunParameter(gunConfig, fireClip);
     }
 
     public void Shoot()
